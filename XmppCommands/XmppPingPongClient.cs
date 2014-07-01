@@ -28,7 +28,6 @@ namespace XmppCommands
 
             client1 = new AppXmppClient("test");
             client2 = new AppXmppClient("test2");
-
             client1.Client.OnIq += ClientOnOnIq;
             client2.Client.OnIq += ClientOnOnIq;
 

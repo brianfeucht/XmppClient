@@ -28,7 +28,7 @@ namespace XmppCommands
             Client.OnMessage += ClientOnMessage;
             Client.OnBindError += ClientOnBindError;
             Client.OnBind += ClientOnOnBind;
-
+            
             Client.OnReceiveXml += (sender, args) => xmppClientLog.Debug(args.Text);
             Client.OnSendXml += (sender, args) => xmppClientLog.Debug(args.Text);
 
