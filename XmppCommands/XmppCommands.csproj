@@ -47,8 +47,10 @@
   <ItemGroup>
     <Compile Include="Interfaces\IXmppIqHandler.cs" />
     <Compile Include="LicenseManager.cs" />
+    <Compile Include="Ping.cs" />
     <Compile Include="PingPong.cs" />
     <Compile Include="PingPongMessageProcessor.cs" />
+    <Compile Include="PingMessageProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmppPingPongClient.cs" />
   </ItemGroup>

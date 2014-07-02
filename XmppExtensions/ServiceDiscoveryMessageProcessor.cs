@@ -38,7 +38,7 @@ namespace XmppExtensions
 
             foreach (var processor in _supportedMessageProcessors)
             {
-                result.Add(processor.FeatureDefinition);
+                result.Add(new Feature(processor.GetType().Name));
             }
 
             client.Send(iq.From, result);

@@ -32,11 +32,6 @@ namespace XmppCommands
             client.Send(iq.From, pingPong);
         }
 
-        public Matrix.Xmpp.Disco.Feature FeatureDefinition
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         public IEnumerable<Type> SupportedTypes()
         {
             yield return typeof (PingPong);

@@ -53,6 +53,7 @@
     <Compile Include="MatrixIqMessage.cs" />
     <Compile Include="MatrixXmppClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResponseIq.cs" />
     <Compile Include="ServiceDiscoveryMessageProcessor.cs" />
     <Compile Include="ServiceDispatcher.cs" />
   </ItemGroup>

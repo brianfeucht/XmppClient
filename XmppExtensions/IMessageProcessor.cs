@@ -12,7 +12,6 @@ namespace XmppExtensions
     public interface IMessageProcessor
     {
         void ProcessMessage(IXmppClient client, IIncomingIqMessage iq);
-        Feature FeatureDefinition { get; }
         IEnumerable<Type> SupportedTypes();
     }
 }

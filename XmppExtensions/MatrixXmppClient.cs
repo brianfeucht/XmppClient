@@ -22,7 +22,7 @@ namespace XmppExtensions
 
         public event EventHandler<IIncomingIqMessage> OnIq;
         public event EventHandler OnConnected;
-        private Jid connectedJid;
+        private Jid connectedJid; 
 
         public MatrixXmppClient(XmppClient client)
         {
@@ -90,17 +90,25 @@ namespace XmppExtensions
         public void Send<T>(string to, T message) where T : XmppXElement
         {
             var iqMessage = new GenericIq<T>(message, to, IqType.get);
-            Send(iqMessage);
+            this.client.Send(iqMessage);
         }
 
-        public void Send(Iq message)
+        public async Task<TR> SendWithResponse<T, TR>(string to, T message)
+            where T : XmppXElement
+            where TR : XmppXElement
         {
-            this.client.SendAndAck(message, AcknowledgeSend);
+            var iqMessage = new GenericIq<T>(message, to, IqType.get);
+            iqMessage.GenerateId();
+            var myFilter = new IqFilter(this.client);
+            var response = await myFilter.SendIqAsync(iqMessage);
+
+            return response.Query as TR;
         }
 
-        private void AcknowledgeSend(object sender, AckEventArgs ackEventArgs)
+        public void Respond<T>(IIncomingIqMessage originalMessage, T response) where T : XmppXElement
         {
-            log.Debug(ackEventArgs.State);
+            var iqMessage = new ResponseIq<T>(response, originalMessage);
+            this.client.Send(iqMessage);
         }
 
         public string ConnectedUser

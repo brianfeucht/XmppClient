@@ -35,12 +35,12 @@ namespace XmppCommands
             client1.OnConnected += ClientOnOnConnected;
 
             dispatcher1 = new ServiceDispatcher(client1, new IMessageProcessor[] {new PingPongMessageProcessor(random)});
-            dispatcher2 = new ServiceDispatcher(client2, new IMessageProcessor[] { new PingPongMessageProcessor(random) });
+            dispatcher2 = new ServiceDispatcher(client2, new IMessageProcessor[] { new PingPongMessageProcessor(random), new PingMessageProcessor() });
         }
 
         private void ClientOnOnConnected(object sender, System.EventArgs e)
         {
-            Task.Run(() =>
+            Task.Run(async () => 
             {
                 while (true)
                 {
@@ -50,8 +50,13 @@ namespace XmppCommands
                         var pingPong = PingPong.StartNew();
                         client1.Send(client2.ConnectedUser, pingPong);
 
-                        return;
+                        var ping = Ping.StartNew();
+                        var response = await client1.SendWithResponse<Ping, Ping>(client2.ConnectedUser, ping);
+                                
+                        log.InfoFormat("Ping sent {0} and response recieved {1}", response.TimeStarted, response.RespondedOn);
                     }
+
+                    return;
                 }
             });
         }

@@ -25,5 +25,10 @@ namespace XmppExtensions
         {
             get { return message.Query; }
         }
+
+        public string Id
+        {
+            get { return message.Id; }
+        }
     }
 }
