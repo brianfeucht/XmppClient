@@ -9,6 +9,7 @@ using Matrix;
 using Matrix.Xml;
 using Matrix.Xmpp;
 using Matrix.Xmpp.Client;
+using XmppExtensions;
 
 namespace XmppCommands
 {
@@ -18,24 +19,26 @@ namespace XmppCommands
 
         Random random = new Random();
 
-        private AppXmppClient client1;
-        private AppXmppClient client2;
+        private readonly MatrixXmppClient client1;
+        private readonly MatrixXmppClient client2;
+        private readonly ServiceDispatcher dispatcher1;
+        private readonly ServiceDispatcher dispatcher2;
 
 
         public XmppPingPongClient()
         {
-            Factory.RegisterElement<PingPong>("litmus:pingpong", "pingpong");
+            LicenseManager.SetLicense();
 
-            client1 = new AppXmppClient("test");
-            client2 = new AppXmppClient("test2");
-            client1.Client.OnIq += ClientOnOnIq;
-            client2.Client.OnIq += ClientOnOnIq;
+            client1 = new MatrixXmppClient(new XmppClient("test", "brianfeucht693b", "123"));
+            client2 = new MatrixXmppClient(new XmppClient("test2", "brianfeucht693b", "123"));
 
             client1.OnConnected += ClientOnOnConnected;
 
+            dispatcher1 = new ServiceDispatcher(client1, new IMessageProcessor[] {new PingPongMessageProcessor(random)});
+            dispatcher2 = new ServiceDispatcher(client2, new IMessageProcessor[] { new PingPongMessageProcessor(random) });
         }
 
-        private void ClientOnOnConnected(object sender, JidEventArgs jidEventArgs)
+        private void ClientOnOnConnected(object sender, System.EventArgs e)
         {
             Task.Run(() =>
             {
@@ -44,12 +47,8 @@ namespace XmppCommands
                     Thread.Sleep(5000);
                     if (client2.ConnectedUser != null)
                     {
-                        var iq = new GenericIq<PingPong>(
-                            PingPong.StartNew(jidEventArgs.Jid),
-                            client2.ConnectedUser,
-                            IqType.get);
-
-                        client1.Client.Send(iq);
+                        var pingPong = PingPong.StartNew();
+                        client1.Send(client2.ConnectedUser, pingPong);
 
                         return;
                     }
@@ -57,42 +56,22 @@ namespace XmppCommands
             });
         }
 
-        private void ClientOnOnIq(object sender, IqEventArgs e)
-        {
-            if (e.Iq.Type == IqType.get && e.Iq.Query is PingPong)
-            {
-                var pingPong = (PingPong) e.Iq.Query;
-
-                log.InfoFormat("{0}: Ping {1}", e.Iq.From.User, pingPong.LastPing);
-
-                Thread.Sleep(random.Next(1000, 10000));
-
-                pingPong.LastPing = DateTime.Now;
-
-                var targetClient = e.Iq.From.User == "test" ? client2 : client1;
-                pingPong.RespondTo = e.Iq.From.User == "test" ? client1.ConnectedUser : client2.ConnectedUser;
-
-
-                targetClient.Client.Send(new GenericIq<PingPong>(pingPong, pingPong.RespondTo, IqType.get));
-            }
-        }
-
         public void Start()
         {
-            client1.Start();
-            client2.Start();
+            client1.Connect();
+            client2.Connect();
         }
 
         public void Stop()
         {
-            client1.Stop();
-            client2.Stop();
+            client1.Disconnect();
+            client2.Disconnect();
         }
 
         public void Dispose()
         {
-            client1.Dispose();
-            client2.Dispose();
+            dispatcher1.Dispose();
+            dispatcher2.Dispose();
         }
     }
 }

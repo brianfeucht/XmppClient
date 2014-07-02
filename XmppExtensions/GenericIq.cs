@@ -8,7 +8,7 @@ using Matrix.Xml;
 using Matrix.Xmpp;
 using Iq = Matrix.Xmpp.Client.Iq;
 
-namespace XmppCommands
+namespace XmppExtensions
 {
     public class GenericIq<T> : Iq where T : XmppXElement
     {

@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XmppCommands
+namespace XmppExtensions
 {
-    public class XmppMessage
+    public interface IIncomingIqMessage
     {
-        public string From { get; set; }
-        public string Body { get; set; }
+        string From { get; }
+        object Query { get; }
     }
 }

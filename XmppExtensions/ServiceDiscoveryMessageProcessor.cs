@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Matrix.Xmpp;
 using Matrix.Xmpp.Client;
 using Matrix.Xmpp.Disco;
-using Iq = Matrix.Xmpp.Base.Iq;
 
 namespace XmppExtensions
 {
@@ -31,7 +30,7 @@ namespace XmppExtensions
             _supportedMessageProcessors = supportedMessageProcessors;
         }
 
-        public void ProcessMessage(IXmppClient client, Iq iq)
+        public void ProcessMessage(IXmppClient client, IIncomingIqMessage iq)
         {
             var result = new DiscoInfoIq(iq.From, client.ConnectedUser, IqType.result);
             
@@ -42,7 +41,7 @@ namespace XmppExtensions
                 result.Add(processor.FeatureDefinition);
             }
 
-            client.Send(result);
+            client.Send(iq.From, result);
         }
 
 
@@ -52,6 +51,12 @@ namespace XmppExtensions
             {
                 return new Feature("http://jabber.org/protocol/disco#info");
             }
+        }
+
+
+        public IEnumerable<Type> SupportedTypes()
+        {
+            yield return typeof (DiscoInfoIq);
         }
     }
 }
