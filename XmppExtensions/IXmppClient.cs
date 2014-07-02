@@ -11,11 +11,11 @@ namespace XmppExtensions
 {
     public interface IXmppClient
     {
-        event EventHandler<IqEventArgs> OnIq;
-        event EventHandler<JidEventArgs> OnBind;
+        event EventHandler<IIncomingIqMessage> OnIq;
+        event EventHandler OnConnected;
         void Connect();
         void Disconnect();
-        void Send(XmppXElement el);
-        Jid ConnectedUser { get; }
+        void Send<T>(string to, T message) where T : XmppXElement;
+        string ConnectedUser { get; }
     }
 }

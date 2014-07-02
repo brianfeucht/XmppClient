@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Matrix;
@@ -11,58 +12,75 @@ namespace XmppExtensions
 {
     public class ServiceDispatcher : IDisposable
     {
-        private readonly IXmppClient _client;
-        private readonly IMessageProcessor[] _supportedProcessors;
-        private readonly IMessageProcessor serviceDiscoveryProcessor;
+        private readonly IXmppClient client;
+        private readonly IMessageProcessor[] supportedProcessors;
+        private readonly IDictionary<Type, IList<IMessageProcessor>> typeToMessageProcessorMap;
 
         public ServiceDispatcher(IXmppClient client, IMessageProcessor[] supportedProcessors)
         {
-            _client = client;
-            _supportedProcessors = supportedProcessors;
+            this.client = client;
+            this.supportedProcessors = supportedProcessors;
 
-            RegisterProcessors(_supportedProcessors);
+            RegisterProcessors(this.supportedProcessors);
 
-            _client.OnBind += ClientOnBind;
-            _client.OnIq += ClientOnIq;
+            typeToMessageProcessorMap = BuildTypeMap(this.supportedProcessors);
+
+            this.client.OnIq += ClientOnIq;
         }
 
-        private void RegisterProcessors(IMessageProcessor[] supportedProcessors)
+        private void RegisterProcessors(IEnumerable<IMessageProcessor> supportedProcessors)
         {
+            MethodInfo registerMethod = typeof(Matrix.Xml.Factory).GetMethod("RegisterElement", new[] { typeof(string), typeof(string)});
+            
             foreach (var process in supportedProcessors)
             {
-                foreach(var type in process.SupportedTypes())
+                foreach (var type in process.SupportedTypes())
                 {
-                    Factory.RegisterElement(type., type.LocalName);
+                    MethodInfo genericMethod = registerMethod.MakeGenericMethod(type);
+                    var parameters = new object[] {type.Namespace, type.Name};
+                    genericMethod.Invoke(null, parameters);
                 }
-
             }
         }
 
-        private void ClientOnIq(object sender, IqEventArgs e)
+        private void ClientOnIq(object sender, IIncomingIqMessage e)
         {
-            if (e.Iq.Query is DiscoInfoIq)
+            var messageType = e.Query.GetType();
+
+            if (!typeToMessageProcessorMap.ContainsKey(messageType))
             {
-                serviceDiscoveryProcessor.ProcessMessage(_client, e.Iq);
                 return;
             }
 
-            foreach (var processor in _supportedProcessors)
+            foreach (var processor in typeToMessageProcessorMap[messageType])
             {
-                var continueProcessing = processor.ProcessMessage(_client, e.Iq);
-
-                if (!continueProcessing)
-                    break;
+                processor.ProcessMessage(client, e);
             }
-        }
-
-        private void ClientOnBind(object sender, JidEventArgs jidEventArgs)
-        {
         }
 
         public void Dispose()
         {
-            _client.OnBind -= ClientOnBind;
-            _client.OnIq -= ClientOnIq;
+            this.client.OnIq -= ClientOnIq;
+        }
+
+        private static IDictionary<Type, IList<IMessageProcessor>> BuildTypeMap(IEnumerable<IMessageProcessor> messageProcessor)
+        {
+            var map = new Dictionary<Type, IList<IMessageProcessor>>();
+            
+            foreach (var processor in messageProcessor)
+            {
+                foreach (var type in processor.SupportedTypes())
+                {
+                    if (!map.ContainsKey(type))
+                    {
+                        map.Add(type, new List<IMessageProcessor>());
+                    }
+                    
+                    map[type].Add(processor);
+                }
+            }
+
+            return map;
         }
     }
 }

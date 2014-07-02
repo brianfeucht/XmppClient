@@ -21,24 +21,18 @@ namespace XmppCommands
             set { SetTag("lastPing", value.ToString()); }
         }
 
-        public string RespondTo
-        {
-            get { return GetTag("respondTo"); }
-            set { SetTag("respondTo", value); } 
-        }
-
-        public PingPong() : base("litmus:pingpong", "pingpong")
+        public PingPong()
+            : base("XmppCommands", "PingPong")
         {
 
         }
 
-        public static PingPong StartNew(string respondTo)
+        public static PingPong StartNew()
         {
             return new PingPong()
             {
                 TimeStarted = DateTime.Now,
                 LastPing = DateTime.Now,
-                RespondTo = respondTo
             };
         }
     }
