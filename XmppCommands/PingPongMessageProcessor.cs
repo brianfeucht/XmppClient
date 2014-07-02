@@ -24,7 +24,7 @@ namespace XmppCommands
         {
             var pingPong = (PingPong)iq.Query;
 
-            log.InfoFormat("{0}: Ping {1}",  pingPong.LastPing);
+            log.InfoFormat("{0}: Ping {1}", client.ConnectedUser, pingPong.LastPing);
             Thread.Sleep(random.Next(1000, 10000));
 
             pingPong.LastPing = DateTime.Now;

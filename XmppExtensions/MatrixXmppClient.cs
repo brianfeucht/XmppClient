@@ -32,6 +32,18 @@ namespace XmppExtensions
             client.OnRegisterError += ClientOnRegisterError;
             client.OnBindError += ClientOnBindError;
             client.OnMessage += ClientOnMessage;
+            client.OnIq += ClientOnIq;
+        }
+
+        private void ClientOnIq(object sender, IqEventArgs e)
+        {
+            if (OnIq == null || e.Iq.Query == null)
+            {
+                return;
+            }
+
+            var message = new MatrixIqMessage(e.Iq);
+            OnIq.Invoke(this, message);
         }
 
         private void ClientOnMessage(object sender, MessageEventArgs messageEventArgs)
